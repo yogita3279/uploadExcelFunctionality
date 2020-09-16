@@ -2,7 +2,7 @@
     ViewBag.Title = "Index";
 }
 
-<h2>Import Employees</h2>
+<h2>Import School Bus Route Data</h2>
 
 <div class="container">
     <div class="tab-content">
@@ -15,7 +15,7 @@
                         @Html.Label("File Upload", new { @class = "col-sm-3" })
 
                         <div class="col-sm-7">
-                            <input type="file" id="postedFile" name="postedFile" class="form-control" accept=".xls,.xlsx" />
+                            <input type="file" id="postedFile" name="postedFile" class="form-control" accept=".xls,.xlsx" multiple required />
                         </div>
                     </div>
 
