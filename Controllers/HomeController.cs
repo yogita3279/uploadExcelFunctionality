@@ -5,10 +5,6 @@ using System.IO;
 using System.Web;
 using System.Web.Mvc;
 using WebApplication4.Models;
-using System.Data.SqlClient;
-using System.Configuration;
-
-
 using System.Collections.Generic;
 
 
@@ -35,64 +31,44 @@ namespace WebApplication4.Controllers
             return View();
         }
         /// <summary>
-        /// Post method for importing Data 
+        /// Post method for importing users 
         /// </summary>
         /// <param name="postedFile"></param>
         /// <returns></returns>
         [HttpPost]
         public ActionResult Index(HttpPostedFileBase[] postedFile)
         {
-
-            DataSet ds = GetDataTablesFromExcel(postedFile);
-            for (int i = 0; i < ds.Tables.Count; i++)
-            {
-                using (SqlConnection con = new SqlConnection(ConfigurationManager.ConnectionStrings["Constring"].ConnectionString))
-                {
-                    using (SqlBulkCopy sqlBulkCopy = new SqlBulkCopy(con))
-                    {
-                        sqlBulkCopy.DestinationTableName = ds.Tables[0].TableName;
-                        con.Open();
-                        sqlBulkCopy.WriteToServer(ds.Tables[0]);
-                        con.Close();
-                    }
-                }
-            }
-
-            return View();
-        }
-
-        private DataSet GetDataTablesFromExcel(HttpPostedFileBase[] postedFiles)
-        {
             DataSet ds = new DataSet();
+
             string path = Server.MapPath("~/UploadedFiles/");
             if (!Directory.Exists(path))
             {
                 Directory.CreateDirectory(path);
             }
 
-            for (int j = 0; j < postedFiles.Length; j++)
+            for (int j = 0; j < postedFile.Length; j++)
             {
 
-                if (postedFiles[j] != null)
+                if (postedFile[j] != null)
                 {
                     try
                     {
-                        HttpPostedFileBase postedFile = postedFiles[j];
+                        //HttpPostedFileBase postedFile = postedFile[j];
                         string filePath = string.Empty;
-                        filePath = path + Path.GetFileName(postedFile.FileName);
-                        string fileExtension = Path.GetExtension(postedFile.FileName);
+                        filePath = path + Path.GetFileName(postedFile[j].FileName);
+                        string fileExtension = Path.GetExtension(postedFile[j].FileName);
 
                         //Validate uploaded file and return error.
                         if (fileExtension != ".xls" && fileExtension != ".xlsx")
                         {
                             ViewBag.Message = "Please select the excel file with .xls or .xlsx extension";
-                           // return Index();
+                            return View();
                         }
 
                       
-
                         //Save file to folder
-                        postedFile.SaveAs(filePath);
+                        //var filePath = folderPath + Path.GetFileName(postedFile.FileName);
+                        postedFile[j].SaveAs(filePath);
 
                         //Get file extension
 
@@ -142,7 +118,13 @@ namespace WebApplication4.Controllers
                         }
 
                         GetSubmittedBusRouteDataFromExcelRow(dt);
-                     
+                        //Insert records to Submitted Route table.
+                        //using (var context = new DemoContext())
+                        //{
+                        //    var a = GetSubmittedBusRouteDataFromExcelRow(dt);
+                        //    context.STARS_SubmittedRouteData.Add(a);
+                        //    context.SaveChanges();
+                        //}
                         ViewBag.Message = "Data Imported Successfully.";
                     }
                     catch (Exception ex)
@@ -150,30 +132,31 @@ namespace WebApplication4.Controllers
                         ViewBag.Message = ex.Message;
                     }
                 }
+
                 else
+
                 {
                     ViewBag.Message = "Please select the file first to upload.";
                 }
-                //return View();
             }
-            Directory.Delete(path, true);
-
-            return ds;
+            return View();
         }
+
         private static DataTable GetSchemaFromExcel(OleDbConnection excelOledbConnection)
         {
             return excelOledbConnection.GetOleDbSchemaTable(OleDbSchemaGuid.Tables, null);
         }
 
+        //private STARS_SubmittedRouteData GetSubmittedBusRouteDataFromExcelRow(DataTable dt)
         private void GetSubmittedBusRouteDataFromExcelRow(DataTable dt)
         {
             try
             {
 
-                int StopNumber  ;
+                int StopNumber;
                 double StopLatitude;
                 double StopLongitude;
-                var StopDescription ="" ;
+                var StopDescription = "";
                 int AssignedStudents;
 
 
@@ -213,11 +196,11 @@ namespace WebApplication4.Controllers
                         }
                         for (int i = 15; i <= 41; i++)
                         {
-                            StopNumber=int.Parse(dt.Rows[i][0].ToString());
-                            StopLatitude=double.Parse(dt.Rows[i][1].ToString());
-                            StopLongitude=double.Parse(dt.Rows[i][2].ToString());
-                            StopDescription=dt.Rows[i][3].ToString();
-                            AssignedStudents=int.Parse(dt.Rows[i][6].ToString());
+                            StopNumber = int.Parse(dt.Rows[i][0].ToString());
+                            StopLatitude = double.Parse(dt.Rows[i][1].ToString());
+                            StopLongitude = double.Parse(dt.Rows[i][2].ToString());
+                            StopDescription = dt.Rows[i][3].ToString();
+                            AssignedStudents = int.Parse(dt.Rows[i][6].ToString());
 
                             var saveObj = new STARS_SubmittedRouteData
                             {
@@ -245,7 +228,7 @@ namespace WebApplication4.Controllers
                     }
                     context.SaveChanges();
                 }
-            
+
             }
             catch (Exception ex)
             {
